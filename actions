@@ -137,6 +137,7 @@ ensure_dotnet() {
 ensure_reportgenerator() {
   ensure_dotnet;
 
+  export PATH="${SCRIPT_DIR}/.tools:${PATH}";
   which reportgenerator > /dev/null;
   if [[ "$EXIT_CODE" -ne "0" ]];
   then
