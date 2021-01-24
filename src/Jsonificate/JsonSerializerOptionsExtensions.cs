@@ -1,7 +1,7 @@
-using System.Text.Json;
+using Jsonificate;
 using Microsoft.Extensions.ObjectPool;
 
-namespace Jsonificate
+namespace System.Text.Json
 {
     public static class JsonSerializerOptionsExtensions
     {
