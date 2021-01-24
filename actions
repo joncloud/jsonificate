@@ -139,9 +139,14 @@ ensure_reportgenerator() {
 
   export PATH="${SCRIPT_DIR}/.tools:${PATH}";
   which reportgenerator > /dev/null;
-  if [[ "$EXIT_CODE" -ne "0" ]];
+  if [[ "$?" -ne "0" ]];
   then
-    dotnet tool install dotnet-reportgenerator-globaltool --tool-path .tools
+    dotnet tool install dotnet-reportgenerator-globaltool --tool-path "${SCRIPT_DIR}/.tools";
+    if [[ "$?" -ne "0" ]];
+    then
+      dotnet tool uninstall dotnet-reportgenerator-globaltool --tool-path "${SCRIPT_DIR}/.tools";
+      dotnet tool install dotnet-reportgenerator-globaltool --tool-path "${SCRIPT_DIR}/.tools";
+    fi
   fi
 }
 
