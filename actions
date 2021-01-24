@@ -69,6 +69,7 @@ download() {
 
 JQ_PATH="jq";
 ensure_jq() {
+  export PATH="${SCRIPT_DIR}/.tools:${PATH}";
   which $JQ_PATH > /dev/null;
   if [[ "$?" -ne "0" ]];
   then
@@ -92,14 +93,15 @@ ensure_jq() {
     fi
   fi
 
-  JQ_VERSION=$($JQ_PATH --version);
-  log_info "Using jq ${JQ_VERSION} ($(which $JQ_PATH))";
+  JQ_VERSION=$(jq --version);
+  log_info "Using jq ${JQ_VERSION} ($(which jq))";
 }
 
 DOTNET_PATH="dotnet";
 ensure_dotnet() {
   ensure_jq;
-  DOTNET_VERSION=$(cat "${SCRIPT_DIR}/global.json" | ${JQ_PATH} '.sdk.version' -r);
+  export PATH="${SCRIPT_DIR}/.tools/.dotnet:${PATH}";
+  DOTNET_VERSION=$(cat "${SCRIPT_DIR}/global.json" | jq '.sdk.version' -r);
 
   which $DOTNET_PATH > /dev/null;
   EXIT_CODE=$?;
@@ -115,7 +117,7 @@ ensure_dotnet() {
 
   if [[ "$EXIT_CODE" -ne "0" ]];
   then
-    export DOTNET_PATH="${SCRIPT_DIR}/.tools/dotnet/dotnet";
+    export DOTNET_PATH="${SCRIPT_DIR}/.tools/.dotnet/dotnet";
     which $DOTNET_PATH > /dev/null;
     if [[ "$?" -ne "0" ]];
     then
@@ -125,11 +127,11 @@ ensure_dotnet() {
       download 'https://dotnet.microsoft.com/download/dotnet-core/scripts/v1/dotnet-install.sh' $DOTNET_INSTALLER_PATH;
       chmod +x $DOTNET_INSTALLER_PATH;
 
-      $DOTNET_INSTALLER_PATH --install-dir "${SCRIPT_DIR}/.tools/dotnet" --version $DOTNET_VERSION;
+      $DOTNET_INSTALLER_PATH --install-dir "${SCRIPT_DIR}/.tools/.dotnet" --version $DOTNET_VERSION;
     fi
   fi
 
-  log_info "Using dotnet ${DOTNET_VERSION} ($(which $DOTNET_PATH))";
+  log_info "Using dotnet ${DOTNET_VERSION} ($(which dotnet))";
 }
 
 # Action functions - these are exposed for calling
@@ -140,33 +142,33 @@ action_help() {
 
 action_restore() {
   ensure_dotnet;
-  $DOTNET_PATH restore $@;
+  dotnet restore $@;
 }
 
 action_build() {
-  ensure_dotnet;
-  $DOTNET_PATH build $@
+c  ensure_dotnet;
+  dotnet build $@
 }
 
 action_test() {
   ensure_dotnet;
-  $DOTNET_PATH test $@
+  dotnet test $@
 }
 
 action_code_coverage() {
   ensure_dotnet;
-  $DOTNET_PATH tool install dotnet-reportgenerator-globaltool --tool-path .tools
-  "${SCRIPT_DIR}/.tools/reportgenerator" -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:Cobertura
+  dotnet tool install dotnet-reportgenerator-globaltool --tool-path .tools
+  reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:Cobertura
 }
 
 action_benchmark() {
   ensure_dotnet;
-  $DOTNET_PATH benchmarks/Jsonificate.Benchmarks/bin/release/net5.0/Jsonificate.Benchmarks.dll;
+  dotnet benchmarks/Jsonificate.Benchmarks/bin/release/net5.0/Jsonificate.Benchmarks.dll;
 }
 
 action_pack() {
   ensure_dotnet;
-  $DOTNET_PATH pack $@ src/Jsonificate/Jsonificate.csproj;
+  dotnet pack $@ src/Jsonificate/Jsonificate.csproj;
 }
 
 # Main function
