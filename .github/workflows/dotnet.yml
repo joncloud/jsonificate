@@ -1,0 +1,61 @@
+name: .NET
+
+on:
+  push:
+    branches: [ publish ]
+
+  pull_request:
+    branches: [ publish ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: setup
+      uses: actions/setup-dotnet@v1
+
+    - name: restore
+      run: dotnet restore
+
+    - name: build
+      run: dotnet build --configuration release --no-restore
+
+    - name: test
+      run: dotnet test --configuration release --no-build --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura -- xunit.parallelizeAssembly=true xunit.parallelizeTestCollections=true
+
+    - name: install report generator
+      run: dotnet tool install dotnet-reportgenerator-globaltool --tool-path .tools
+
+    - name: generate code coverage report
+      run: .tools/reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:Cobertura
+
+    - name: upload code coverage report
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Cobertura
+        path: artifacts/code-coverage
+
+    - name: benchmark
+      run: sudo dotnet benchmarks/Jsonificate.Benchmarks/bin/release/net5.0/Jsonificate.Benchmarks.dll
+
+    - name: upload benchmark
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: BenchmarkDotNet
+        path: BenchmarkDotNet.Artifacts/results
+
+    - name: pack
+      run: dotnet pack --configuration release --no-restore --no-build src/Jsonificate/Jsonificate.csproj
+      if: ${{ contains(github.ref, 'refs/heads/publish') }}
+
+    - name: upload package
+      uses: actions/upload-artifact@v1.0.0
+      if: ${{ contains(github.ref, 'refs/heads/publish') }}
+      with:
+        name: Jsonificate
+        path: src/Jsonificate/bin/release
