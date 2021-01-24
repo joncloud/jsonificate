@@ -71,7 +71,7 @@ namespace Jsonificate
                 else
                 {
                     var propertyName = reader.GetString();
-                    throw new InvalidOperationException($"Unable to find {propertyName} for {_type}, with instance {instance}");
+                    throw new JsonException($"Unable to find {propertyName} for {_type}, with instance {instance}");
                 }
             }
 

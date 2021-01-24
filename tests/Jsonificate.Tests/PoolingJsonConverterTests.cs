@@ -6,19 +6,53 @@ namespace Jsonificate.Tests
 {
     public class PoolingJsonConverterTests
     {
+        readonly ObjectPool<TestClass> _pool;
+        readonly JsonSerializerOptions _options;
+
+        public PoolingJsonConverterTests()
+        {
+            var provider = new DefaultObjectPoolProvider();
+            _pool = provider.Create(new DefaultPooledObjectPolicy<TestClass>());
+            _options = new JsonSerializerOptions()
+                .AddPoolingConverter(_pool);
+        }
+
+        [Fact]
+        public void Deserialize_ShouldThrowJsonException_GivenMissingStartObject()
+        {
+            var json = JsonSerializer.Serialize(TestClass.Random(), _options);
+            json = "[" + json.Substring(1);
+
+            var ex = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<TestClass>(json, _options));
+
+            var expected = $"Type mismatch expected: {JsonTokenType.StartObject}, actual: {JsonTokenType.StartArray}";
+            var actual = ex.Message;
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Deserialize_ShouldThrowJsonException_GivenMissingProperty()
+        {
+            var json = JsonSerializer.Serialize(TestClass.Random(), _options);
+            json = json.Substring(0, json.Length - 1) + ",\"anotherProperty\":\"\"}";
+
+            var ex = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<TestClass>(json, _options));
+
+            var expected = $"Unable to find anotherProperty for {typeof(TestClass)}, with instance Jsonificate.Tests.TestClass";
+            var actual = ex.Message;
+
+            Assert.Equal(expected, actual);
+        }
+
         [Fact]
         public void Serialize_ShouldReuseFromPool()
         {
-            var provider = new DefaultObjectPoolProvider();
-            var pool = provider.Create(new DefaultPooledObjectPolicy<TestClass>());
-            var options = new JsonSerializerOptions()
-                .AddPoolingConverter(pool);
+            var expected = new Context(_options);
 
-            var expected = new Context(options);
+            _pool.Return(expected.Instance);
 
-            pool.Return(expected.Instance);
-
-            var actual = new Context(options);
+            var actual = new Context(_options);
 
             Assert.NotEqual(expected.Value, actual.Value);
             Assert.Same(expected.Instance, actual.Instance);
