@@ -20,10 +20,10 @@ jobs:
       run: ./actions restore
 
     - name: build
-      run: ./actions build --configuration release --no-restore
+      run: ./actions build --configuration Release --no-restore
 
     - name: test
-      run: ./actions test --configuration release --no-build --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura -- xunit.parallelizeAssembly=true xunit.parallelizeTestCollections=true
+      run: ./actions test --configuration Release --no-build --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura -- xunit.parallelizeAssembly=true xunit.parallelizeTestCollections=true
 
     - name: generate code coverage report
       run: ./actions code_coverage
@@ -44,7 +44,7 @@ jobs:
         path: BenchmarkDotNet.Artifacts/results
 
     - name: pack
-      run: ./actions pack --configuration release --no-restore --no-build
+      run: ./actions pack --configuration Release --no-restore --no-build
       if: ${{ contains(github.ref, 'refs/heads/publish') }}
 
     - name: upload package
@@ -52,4 +52,4 @@ jobs:
       if: ${{ contains(github.ref, 'refs/heads/publish') }}
       with:
         name: Jsonificate
-        path: src/Jsonificate/bin/release
+        path: src/Jsonificate/bin/Release
