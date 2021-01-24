@@ -146,7 +146,7 @@ action_restore() {
 }
 
 action_build() {
-c  ensure_dotnet;
+  ensure_dotnet;
   dotnet build $@
 }
 
