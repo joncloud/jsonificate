@@ -21,7 +21,14 @@ namespace Jsonificate
 
         public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return _importer.ReadObject(ref reader, options);
+            var value = _pool.Get();
+            Populate(ref reader, typeToConvert, value, options);
+            return value;
+        }
+
+        protected virtual void Populate(ref Utf8JsonReader reader, Type typeToConvert, T value, JsonSerializerOptions options)
+        {
+            _importer.ReadObject(ref reader, value, options);
         }
 
         public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

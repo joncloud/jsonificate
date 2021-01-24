@@ -34,6 +34,9 @@ jobs:
         name: Cobertura
         path: artifacts/code-coverage
 
+    - name: samples
+      run: ./actions sample --configuration Release --no-build --no-restore
+
     - name: benchmark
       run: sudo ./actions benchmark
 

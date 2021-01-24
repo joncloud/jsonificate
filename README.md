@@ -23,7 +23,7 @@ dotnet add package Jsonificate
 
 ### Deep Cloning Objects
 
-Use the extension method for `JsonSerializerOptions` in order to create a new cloner instance: `System.Text.Json.JsonSerializerOptionsExtensions.CreateCloner`:
+Use the extension method for `JsonSerializerOptions` in order to create a new cloner instance: `System.Text.Json.JsonSerializerOptionsExtensions.CreateCloner`. For more details, check out [DeepCloningObjects](./samples/ReadmeSamples/DeepCloningObjects.cs).
 
 ```csharp
 using System;
@@ -34,7 +34,7 @@ var options = new JsonSerializerOptions();
 
 var cloner = options.CreateCloner();
 
-var original = new { x = 10, y = 53 };
+var original = new Point { X = 10, Y = 53 };
 var clone = cloner.Clone(original);
 
 Console.WriteLine($"Original: {original}");
@@ -45,34 +45,82 @@ Console.WriteLine(object.ReferenceEquals(original, clone));
 And the expected results:
 
 ```bash
-Original: { x = 10, y = 53 }
-Clone: { x = 10, y = 53 }
+Original: (10, 53)
+Clone: (10, 53)
 False
 ```
 
 ### Working with Object Pools
 
-Augment an existing `JsonSerializerOptions` by adding an `ObjectPool<T>` to it with the extension method `System.Text.Json.JsonSerializerOptionsExtensions.AddPoolingConverter`.
+Augment an existing `JsonSerializerOptions` by adding an `ObjectPool<T>` to it with the extension method `System.Text.Json.JsonSerializerOptionsExtensions.AddPoolingConverter`. For more details, check out [WorkingWithObjectPools](./samples/ReadmeSamples/WorkingWithObjectPools.cs).
 
 ```csharp
+using Microsoft.Extensions.ObjectPool;
+
 // Create your own pools
-ObjectPool<MyObject> pool = ...;
+ObjectPool<Point> pool = ...;
 
 var options = new JsonSerializerOptions()
-  .AddPoolingConverter(_pool);
+  .AddPoolingConverter(pool);
 
-string json = "...";
+string json = "{\"X\":10,\"Y\":53}";
 
-var o = JsonSerializer.Deserialize<MyObject>(json, options);
+var p = JsonSerializer.Deserialize<Point>(json, options);
 
-DoWork(o);
+DoWork(p);
 
-pool.Return(o);
+pool.Return(p);
 ```
 
 #### Custom Converters and Object Pools
 
-Currently the conversion routine does not allow for a `JsonConverter` to be used in order to serialize top-level objects and also leverage `ObjectPool<T>`. The work around for this would be to introduce a top-level placeholder object that contains a reference of the type that needs to be customized.
+Using a top-level object that does not require a custom converter will keep thing simple, however when this cannot be achieved `Jsonificate.PoolingJsonConverter` can be overridden. For more details, check out [WorkingWithObjectPoolsCustomConverter](./samples/ReadmeSamples/WorkingWithObjectPoolsCustomConverter.cs).
+
+```csharp
+
+ObjectPool<Point> pool = ...;
+
+var options = new JsonSerializerOptions();
+options.Converters.Add(new PointPoolingJsonConverter(pool, options));
+
+public class Point
+{
+  public int X { get; set; }
+  public int Y { get; set; }
+}
+
+public class PointPoolingJsonConverter : PoolingJsonConverter<Point>
+{
+  public PointPoolingJsonConverter(ObjectPool<Point> pool, JsonSerializerOptions options)
+    : base(pool, options)
+  {
+  }
+
+  protected override void Populate(ref Utf8JsonReader reader, Type typeToConvert, Point value, JsonSerializerOptions options)
+  {
+    if (reader.TokenType != JsonTokenType.StartArray)
+    {
+      throw new JsonException();
+    }
+
+    value.X = reader.Read() ? reader.GetInt32() : throw new JsonException();
+    value.Y = reader.Read() ? reader.GetInt32() : throw new JsonException();
+
+    if (!reader.Read() || reader.TokenType != JsonTokenType.EndArray)
+    {
+      throw new JsonException();
+    }
+  }
+
+  public override void Write(Utf8JsonWriter writer, Point value, JsonSerializerOptions options)
+  {
+    writer.WriteStartArray();
+    writer.WriteNumberValue(value.X);
+    writer.WriteNumberValue(value.Y);
+    writer.WriteEndArray();
+  }
+}
+```
 
 ## Building the solution
 

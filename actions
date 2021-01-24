@@ -187,6 +187,11 @@ action_pack() {
   dotnet pack $@ src/Jsonificate/Jsonificate.csproj;
 }
 
+action_sample() {
+  ensure_dotnet
+  dotnet run $@ --project samples/ReadmeSamples/ReadmeSamples.csproj
+}
+
 # Main function
 
 ACTION="action_${1}";
