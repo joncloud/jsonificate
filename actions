@@ -134,6 +134,16 @@ ensure_dotnet() {
   log_info "Using dotnet ${DOTNET_VERSION} ($(which dotnet))";
 }
 
+ensure_reportgenerator() {
+  ensure_dotnet;
+
+  which reportgenerator > /dev/null;
+  if [[ "$EXIT_CODE" -ne "0" ]];
+  then
+    dotnet tool install dotnet-reportgenerator-globaltool --tool-path .tools
+  fi
+}
+
 # Action functions - these are exposed for calling
 
 action_help() {
@@ -147,18 +157,18 @@ action_restore() {
 
 action_build() {
   ensure_dotnet;
-  dotnet build $@
+  dotnet build $@;
 }
 
 action_test() {
   ensure_dotnet;
-  dotnet test $@
+  dotnet test $@;
 }
 
 action_code_coverage() {
-  ensure_dotnet;
-  dotnet tool install dotnet-reportgenerator-globaltool --tool-path .tools
-  reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:Cobertura
+  ensure_reportgenerator;
+  REPORT_TYPES="Cobertura;Html";
+  reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES;
 }
 
 action_benchmark() {
