@@ -36,7 +36,7 @@ namespace Jsonificate.Tests
                     }
                 }
             }
-            return true;
+            return result;
         }
 
         public override int GetHashCode()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Extensions.ObjectPool;
 using Xunit;
@@ -56,6 +57,18 @@ namespace Jsonificate.Tests
 
             Assert.NotEqual(expected.Value, actual.Value);
             Assert.Same(expected.Instance, actual.Instance);
+
+            var withDefaultValues = new TestClass
+            {
+                DateTime = default,
+                Int32s = new List<int>(),
+                String = default,
+                Sub = new SubTestClass
+                {
+                    Guid = default,
+                },
+            };
+            Assert.NotEqual(expected.Instance, withDefaultValues);
         }
 
         class Context
