@@ -163,6 +163,9 @@ action_code_coverage() {
 
 action_benchmark() {
   ensure_dotnet;
+  log_info "dll found? $(ls benchmarks/Jsonificate.Benchmarks/bin/release/net5.0/Jsonificate.Benchmarks.dll)";
+  ls -lah benchmarks/Jsonificate.Benchmarks/bin/release/net5.0
+  log_info "dotnet benchmarks/Jsonificate.Benchmarks/bin/release/net5.0/Jsonificate.Benchmarks.dll";
   dotnet benchmarks/Jsonificate.Benchmarks/bin/release/net5.0/Jsonificate.Benchmarks.dll;
 }
 
