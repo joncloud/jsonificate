@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: env
-      run: ./actions env '$GITHUB_ENV' '${{ github.ref }}' '${{ github.sha }}'
+      run: ./actions env $GITHUB_ENV '${{ github.ref }}' '${{ github.sha }}'
 
     - name: tmp
       run: echo $EXTRA_ARGS
