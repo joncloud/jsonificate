@@ -19,27 +19,40 @@ namespace Jsonificate
             _type = typeof(T);
             _properties = new SpanDictionary<IJsonPropertyReader<T>>();
 
-            foreach (var property in _type.GetProperties())
+            foreach (var member in _type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (!property.CanWrite)
+                if (member is PropertyInfo property)
                 {
-                    continue;
+                    if (!property.CanWrite)
+                    {
+                        continue;
+                    }
                 }
-                if (property.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
+                else if (member is FieldInfo field)
+                {
+                    if (!options.IncludeFields)
+                    {
+                        continue;
+                    }
+                    if (field.IsInitOnly)
+                    {
+                        continue;
+                    }
+                }
+                if (member.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
                 {
                     continue;
                 }
                 
-                var name = property.Name;
+                var name = member.Name;
 
                 // TODO options.PropertyNameCaseInsensitive
                 // TODO options.JsonNumberHandling
-                // TODO options.IgnoreReadOnlyFields
                 // TODO options.IgnoreNullValues
                 // TODO options.JsonIgnoreCondition
                 // TODO options.AllowTrailingCommas
 
-                var propertyName = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+                var propertyName = member.GetCustomAttribute<JsonPropertyNameAttribute>();
                 if (propertyName is not null)
                 {
                     name = propertyName.Name;
@@ -49,13 +62,33 @@ namespace Jsonificate
                     name = options.PropertyNamingPolicy.ConvertName(name);
                 }
 
-                var key = name;
-
-                var importerType = typeof(JsonPropertyReader<,>)
-                    .MakeGenericType(_type, property.PropertyType);
-                var value = (IJsonPropertyReader<T>)Activator.CreateInstance(importerType, new[] { property });
-                _properties.Add(key, value);
+                var value = member switch
+                {
+                    PropertyInfo p => CreatePropertyReader(p),
+                    FieldInfo f => CreateFieldReader(f),
+                    _ => null,
+                };
+                if (value is null)
+                {
+                    continue;
+                }
+                
+                _properties.Add(name, value);
             }
+        }
+
+        IJsonPropertyReader<T> CreateFieldReader(FieldInfo field)
+        {
+            var readerType = typeof(FieldJsonPropertyReader<,>)
+                .MakeGenericType(_type, field.FieldType);
+            return (IJsonPropertyReader<T>)Activator.CreateInstance(readerType, new[] { field });
+        }
+
+        IJsonPropertyReader<T> CreatePropertyReader(PropertyInfo property)
+        {
+            var readerType = typeof(PropertyJsonPropertyReader<,>)
+                .MakeGenericType(_type, property.PropertyType);
+            return (IJsonPropertyReader<T>)Activator.CreateInstance(readerType, new[] { property });
         }
 
         public void ReadObject(ref Utf8JsonReader reader, T value, JsonSerializerOptions options)

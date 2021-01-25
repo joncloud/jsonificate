@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -8,13 +9,14 @@ namespace Jsonificate.Tests
 {
     public class PoolingJsonConverterTests
     {
+        readonly DefaultObjectPoolProvider _provider;
         readonly ObjectPool<TestClass> _pool;
         readonly JsonSerializerOptions _options;
 
         public PoolingJsonConverterTests()
         {
-            var provider = new DefaultObjectPoolProvider();
-            _pool = provider.Create(new DefaultPooledObjectPolicy<TestClass>());
+            _provider = new DefaultObjectPoolProvider();
+            _pool = _provider.Create(new DefaultPooledObjectPolicy<TestClass>());
             _options = new JsonSerializerOptions()
                 .AddPoolingConverter(_pool);
         }
@@ -143,6 +145,110 @@ namespace Jsonificate.Tests
             Assert.Equal(0, result.Ignored);
         }
 
+        [Fact]
+        public void Serialize_ShouldIgnoreField_GivenIncludeFieldsFalse()
+        {
+            var context = new Context(_options);
+
+            using var document = JsonDocument.Parse(context.Json);
+
+            var rootElement = document.RootElement;
+
+            Assert.False(
+                rootElement.TryGetProperty(nameof(TestClass.Int32Field), out var _),
+                $"Document should **not** have a property of {nameof(TestClass.Int32Field)}"
+            );
+
+            var json = context.Json.Substring(0, context.Json.Length - 1) + ",\"Int32Field\":123}";
+
+            var result = JsonSerializer.Deserialize<TestClass>(json, _options);
+            Assert.Equal(0, result.Int32Field);
+        }
+
+        [Fact]
+        public void Serialize_ShouldIncludeField_GivenIncludeFieldsTrue()
+        {
+            var options = new JsonSerializerOptions {
+                IncludeFields = true,
+            }.AddPoolingConverter(_pool);
+
+            var testClass = TestClass.Random();
+            testClass.Int32Field = new Random().Next();
+
+            var context = new Context(options, testClass);
+
+            Assert.Equal(testClass.Int32Field, context.Instance.Int32Field);
+        }
+
+        [Fact]
+        public void Serialize_ShouldIgnoreEvents()
+        {
+            var testClass = TestClass.Random();
+            testClass.NothingHappened += () => { };
+            var context = new Context(_options, testClass);
+
+            using var document = JsonDocument.Parse(context.Json);
+
+            var rootElement = document.RootElement;
+
+            Assert.False(
+                rootElement.TryGetProperty(nameof(TestClass.NothingHappened), out var _),
+                $"Document should **not** have a property of {nameof(TestClass.Int32Field)}"
+            );
+        }
+
+        [Fact]
+        public void Serialize_ShouldIncludeReadOnlyFields_GivenIgnoreReadOnlyFieldsFalse()
+        {
+            var pool = _provider.Create<ReadonlyFields>();
+            var options = new JsonSerializerOptions {
+                IncludeFields = true,
+                IgnoreReadOnlyFields = false,
+            }.AddPoolingConverter(pool);
+
+            var item = new ReadonlyFields(123);
+
+            var expected = "{\"Int32\":123}";
+            var actual = JsonSerializer.Serialize(item, options);
+
+            Assert.Equal(expected, actual);
+
+            var read = JsonSerializer.Deserialize<ReadonlyFields>(actual, options);
+
+            Assert.Equal(0, read.Int32);
+        }
+
+        [Fact]
+        public void Serialize_ShouldIncludeReadOnlyFields_GivenIgnoreReadOnlyFieldsTrue()
+        {
+            var pool = _provider.Create<ReadonlyFields>();
+            var options = new JsonSerializerOptions {
+                IncludeFields = true,
+                IgnoreReadOnlyFields = true,
+            }.AddPoolingConverter(pool);
+
+            var item = new ReadonlyFields(123);
+
+            var expected = "{}";
+            var actual = JsonSerializer.Serialize(item, options);
+
+            Assert.Equal(expected, actual);
+        }
+
+        class ReadonlyFields
+        {
+            public readonly int Int32;
+
+            public ReadonlyFields()
+            {
+                
+            }
+            public ReadonlyFields(int int32)
+            {
+                Int32 = int32;
+            }
+        }
+
         class Context
         {
             public string Json { get; }
@@ -150,9 +256,14 @@ namespace Jsonificate.Tests
             public string Value { get; }
 
             public Context(JsonSerializerOptions options)
+                : this(options, TestClass.Random())
+            {
+            }
+
+            public Context(JsonSerializerOptions options, TestClass instance)
             {
                 Json = JsonSerializer.Serialize(
-                    TestClass.Random(),
+                    instance,
                     options
                 );
                 Instance = JsonSerializer.Deserialize<TestClass>(

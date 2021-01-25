@@ -5,30 +5,29 @@ using System.Text.Json;
 
 namespace Jsonificate
 {
-    class PropertyJsonPropertyWriter<TInstance, TProperty> : IJsonPropertyWriter<TInstance>
+    class FieldJsonPropertyWriter<TInstance, TField> : IJsonPropertyWriter<TInstance>
     {
-        readonly Func<TInstance, TProperty> _func;
+        readonly Func<TInstance, TField> _func;
         readonly string _name;
 
         [ReflectionReference(typeof(Jsonificate.JsonObjectWriter<>))]
-        public PropertyJsonPropertyWriter(string name, PropertyInfo property)
+        public FieldJsonPropertyWriter(string name, FieldInfo field)
         {
             _name = name;
 
             var method = new DynamicMethod(
                 "GetValue",
-                typeof(TProperty),
+                typeof(TField),
                 new[] { typeof(TInstance) },
                 typeof(PropertyJsonPropertyWriter<,>).Module
             );
             var il = method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
 
-            var getMethod = property.GetGetMethod();
-            il.Emit(getMethod.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getMethod);
+            il.Emit(OpCodes.Ldfld, field);
             il.Emit(OpCodes.Ret);
 
-            _func = method.CreateDelegate<Func<TInstance, TProperty>>();
+            _func = method.CreateDelegate<Func<TInstance, TField>>();
         }
 
         public void WriteProperty(Utf8JsonWriter writer, TInstance instance, JsonSerializerOptions options)
