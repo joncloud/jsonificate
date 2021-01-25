@@ -19,17 +19,11 @@ jobs:
     - name: env
       run: ./actions env $GITHUB_ENV '${{ github.ref }}' '${{ github.sha }}'
 
-    - name: tmp
-      run: echo $EXTRA_ARGS
-
     - name: restore
       run: ./actions restore
 
     - name: build
       run: ./actions build --configuration Release --no-restore ${{ env.EXTRA_ARGS }}
-
-    - name: tmp2
-      run: echo $EXTRA_ARGS
 
     - name: test
       run: ./actions test --configuration Release --no-build --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura -- xunit.parallelizeAssembly=true xunit.parallelizeTestCollections=true
