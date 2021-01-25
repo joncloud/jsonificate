@@ -215,15 +215,12 @@ action_env() {
   then
     VERSION=$(echo $GIT_REF | cut -c12-);
     log_info "Using version ${VERSION}";
-    echo "ACTIONS_EXTRA_ARGS=\"/p:Version=${VERSION}\"" >> $ENV_FILE;
+    echo "ACTIONS_EXTRA_ARGS=/p:Version=${VERSION}" >> $ENV_FILE;
   else
     VERSION_SUFFIX=$GIT_SHA;
     log_info "Using version suffix ${VERSION_SUFFIX}";
-    echo "ACTIONS_EXTRA_ARGS=\"/p:VersionSuffix=${VERSION_SUFFIX}\"" >> $ENV_FILE;
+    echo "ACTIONS_EXTRA_ARGS=/p:VersionSuffix=${VERSION_SUFFIX}" >> $ENV_FILE;
   fi
-
-  log_info "Environment file:";
-  cat $ENV_FILE;
 }
 
 # Main function
