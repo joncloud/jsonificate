@@ -184,12 +184,36 @@ action_benchmark() {
 
 action_pack() {
   ensure_dotnet;
-  dotnet pack $@ src/Jsonificate/Jsonificate.csproj;
+  dotnet pack $@ --include-symbols --include-source src/Jsonificate/Jsonificate.csproj;
 }
 
 action_sample() {
-  ensure_dotnet
-  dotnet run $@ --project samples/ReadmeSamples/ReadmeSamples.csproj
+  ensure_dotnet;
+  dotnet run $@ --project samples/ReadmeSamples/ReadmeSamples.csproj;
+}
+
+action_nuget() {
+  ensure_dotnet;
+
+  API_KEY=$1; shift;
+  dotnet nuget push src/Jsonificate/bin/Release/Jsonificate*.nupkg --api-key $API_KEY;
+}
+
+action_env() {
+  ENV_FILE=$1; shift;
+  GIT_REF=$1; shift;
+  GIT_SHA=$1; shift;
+
+  if [[ $GIT_REF == refs/tags/v* ]];
+  then
+    VERSION=$(echo $GIT_REF | cut -c12-);
+    log_info "Using version ${VERSION}";
+    echo "ACTIONS_EXTRA_ARGS=\"/p:Version=${VERSION}\"" >> $ENV_FILE;
+  else
+    VERSION_SUFFIX=$GIT_SHA;
+    log_info "Using version suffix ${VERSION_SUFFIX}";
+    echo "ACTIONS_EXTRA_ARGS=\"/p:VersionSuffix=${VERSION_SUFFIX}\"" >> $ENV_FILE;
+  fi
 }
 
 # Main function

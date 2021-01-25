@@ -16,11 +16,14 @@ jobs:
     - name: checkout
       uses: actions/checkout@v2
 
+    - name: env
+      run: ./actions env '$GITHUB_ENV' '${{ github.ref }}' '${{ github.sha }}'
+
     - name: restore
       run: ./actions restore
 
     - name: build
-      run: ./actions build --configuration Release --no-restore
+      run: ./actions build --configuration Release --no-restore ${{ env.ACTIONS_EXTRA_ARGS }}
 
     - name: test
       run: ./actions test --configuration Release --no-build --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura -- xunit.parallelizeAssembly=true xunit.parallelizeTestCollections=true
@@ -35,7 +38,7 @@ jobs:
         path: artifacts/code-coverage
 
     - name: samples
-      run: ./actions sample --configuration Release --no-build --no-restore
+      run: ./actions sample --configuration Release --no-build --no-restore ${{ env.ACTIONS_EXTRA_ARGS }}
 
     - name: benchmark
       run: sudo ./actions benchmark
@@ -47,12 +50,18 @@ jobs:
         path: BenchmarkDotNet.Artifacts/results
 
     - name: pack
-      run: ./actions pack --configuration Release --no-restore --no-build
-      if: ${{ contains(github.ref, 'refs/heads/publish') }}
+      run: ./actions pack --configuration Release --no-restore --no-build ${{ env.ACTIONS_EXTRA_ARGS }}
+      if: ${{ contains(github.ref, 'refs/heads/publish') || startsWith(github.ref, 'refs/tags/v') }}
 
     - name: upload package
       uses: actions/upload-artifact@v1.0.0
-      if: ${{ contains(github.ref, 'refs/heads/publish') }}
+      if: ${{ contains(github.ref, 'refs/heads/publish') || startsWith(github.ref, 'refs/tags/v') }}
       with:
         name: Jsonificate
         path: src/Jsonificate/bin/Release
+
+    - name: nuget
+      run: ./actions nuget $NUGET_API_KEY
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
