@@ -23,7 +23,6 @@ namespace Jsonificate
                 {
                     var name = property.Name;
 
-                    // TODO options.PropertyNameCaseInsensitive
                     // TODO options.JsonNumberHandling
                     // TODO options.IgnoreReadOnlyFields
                     // TODO options.IgnoreNullValues

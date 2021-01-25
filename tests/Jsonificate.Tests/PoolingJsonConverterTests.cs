@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using Microsoft.Extensions.ObjectPool;
 using Xunit;
@@ -69,6 +70,54 @@ namespace Jsonificate.Tests
                 },
             };
             Assert.NotEqual(expected.Instance, withDefaultValues);
+        }
+
+        [Fact]
+        public void Serialize_ShouldRenameProperty_GivenJsonPropertyNameAttribute()
+        {
+            var context = new Context(_options);
+
+            using var document = JsonDocument.Parse(context.Json);
+
+            var rootElement = document.RootElement;
+
+            Assert.False(
+                rootElement.TryGetProperty(nameof(TestClass.JsonPropertyRename), out var _),
+                $"Document should **not** have a property of {nameof(TestClass.JsonPropertyRename)}"
+            );
+
+            Assert.True(
+                rootElement.TryGetProperty(TestClass.JsonPropertyRenameName, out var property),
+                $"Document should have a property of {nameof(TestClass.JsonPropertyRename)}"
+            );
+
+            Assert.Equal(context.Instance.JsonPropertyRename, property.GetInt32());
+        }
+
+        [Fact]
+        public void Serialize_ShouldRenameProperty_GivenPropertyNamingConvention()
+        {
+            var options = new JsonSerializerOptions {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            }.AddPoolingConverter(_pool);
+
+            var context = new Context(options);
+
+            using var document = JsonDocument.Parse(context.Json);
+
+            var rootElement = document.RootElement;
+
+            var expected = typeof(TestClass).GetProperties()
+                .Select(prop => prop.Name)
+                .Where(name => name != nameof(TestClass.JsonPropertyRename))
+                .Select(name => options.PropertyNamingPolicy.ConvertName(name))
+                .ToList();
+
+            var actual = expected
+                .Where(name => rootElement.TryGetProperty(name, out var _))
+                .ToList();
+
+            Assert.Equal(expected, actual);
         }
 
         class Context
