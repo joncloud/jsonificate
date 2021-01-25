@@ -25,6 +25,10 @@ namespace Jsonificate
                 {
                     continue;
                 }
+                if (property.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
+                {
+                    continue;
+                }
                 
                 var name = property.Name;
 
@@ -69,8 +73,25 @@ namespace Jsonificate
                 }
                 else
                 {
-                    var propertyName = reader.GetString();
-                    throw new JsonException($"Unable to find {propertyName} for {_type}, with instance {value}");
+                    if (reader.Read())
+                    {
+                        int level = reader.TokenType == JsonTokenType.StartArray ||
+                            reader.TokenType == JsonTokenType.StartObject
+                            ? 1
+                            : 0;
+
+                        while (level > 0 && reader.Read())
+                        {
+                            level += reader.TokenType switch
+                            {
+                                JsonTokenType.StartArray => 1,
+                                JsonTokenType.StartObject => 1,
+                                JsonTokenType.EndArray => -1,
+                                JsonTokenType.EndObject => -1,
+                                _ => 0,
+                            };
+                        }
+                    }
                 }
             }
 

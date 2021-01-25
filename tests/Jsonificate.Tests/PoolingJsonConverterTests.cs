@@ -34,20 +34,6 @@ namespace Jsonificate.Tests
         }
 
         [Fact]
-        public void Deserialize_ShouldThrowJsonException_GivenMissingProperty()
-        {
-            var json = JsonSerializer.Serialize(TestClass.Random(), _options);
-            json = json.Substring(0, json.Length - 1) + ",\"anotherProperty\":\"\"}";
-
-            var ex = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<TestClass>(json, _options));
-
-            var expected = $"Unable to find anotherProperty for {typeof(TestClass)}, with instance Jsonificate.Tests.TestClass";
-            var actual = ex.Message;
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
         public void Serialize_ShouldReuseFromPool()
         {
             var expected = new Context(_options);
@@ -110,6 +96,7 @@ namespace Jsonificate.Tests
             var expected = typeof(TestClass).GetProperties()
                 .Select(prop => prop.Name)
                 .Where(name => name != nameof(TestClass.JsonPropertyRename))
+                .Where(name => name != nameof(TestClass.Ignored))
                 .Select(name => options.PropertyNamingPolicy.ConvertName(name))
                 .ToList();
 
@@ -118,6 +105,42 @@ namespace Jsonificate.Tests
                 .ToList();
 
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Serialize_ShouldIgnoreProperty_GivenJsonIgnoreAttribute()
+        {
+            var context = new Context(_options);
+
+            using var document = JsonDocument.Parse(context.Json);
+
+            var rootElement = document.RootElement;
+
+            Assert.False(
+                rootElement.TryGetProperty(nameof(TestClass.Ignored), out var _),
+                $"Document should **not** have a property of {nameof(TestClass.Ignored)}"
+            );
+
+            var json = context.Json.Substring(0, context.Json.Length - 1) + ",\"Ignored\":123}";
+
+            var result = JsonSerializer.Deserialize<TestClass>(json, _options);
+            Assert.Equal(0, result.Ignored);
+        }
+        
+        [Theory]
+        [InlineData(",\"Obj\":{\"Prop\":123}}")]
+        [InlineData(",\"Arr\":[1,2,3]}")]
+        [InlineData(",\"Obj\":{\"Arr\":[1,2,3]}}")]
+        [InlineData(",\"Arr\":[{\"Prop\":123}]}")]
+        [InlineData(",\"Level\":{\"One\":{\"Two\":2}}}")]
+        public void Serialize_ShouldKeepReading_GivenAdditionalComplexProperty(string additionalJson)
+        {
+            var context = new Context(_options);
+
+            var json = context.Json.Substring(0, context.Json.Length - 1) + additionalJson;
+
+            var result = JsonSerializer.Deserialize<TestClass>(json, _options);
+            Assert.Equal(0, result.Ignored);
         }
 
         class Context
