@@ -158,37 +158,44 @@ action_help() {
 
 action_restore() {
   ensure_dotnet;
+  log_info "dotnet restore $*";
   dotnet restore $@;
 }
 
 action_build() {
   ensure_dotnet;
+  log_info "dotnet build $*";
   dotnet build $@;
 }
 
 action_test() {
   ensure_dotnet;
+  log_info "dotnet test $*";
   dotnet test $@;
 }
 
 action_code_coverage() {
   ensure_reportgenerator;
   REPORT_TYPES="Cobertura;Html";
+  log_info "reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES";
   reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES;
 }
 
 action_benchmark() {
   ensure_dotnet;
+  log_info "dotnet benchmarks/Jsonificate.Benchmarks/bin/Release/net5.0/Jsonificate.Benchmarks.dll";
   dotnet benchmarks/Jsonificate.Benchmarks/bin/Release/net5.0/Jsonificate.Benchmarks.dll;
 }
 
 action_pack() {
   ensure_dotnet;
+  log_info "dotnet pack $* --include-symbols --include-source src/Jsonificate/Jsonificate.csproj";
   dotnet pack $@ --include-symbols --include-source src/Jsonificate/Jsonificate.csproj;
 }
 
 action_sample() {
   ensure_dotnet;
+  log_info "dotnet run $* --project samples/ReadmeSamples/ReadmeSamples.csproj";
   dotnet run $@ --project samples/ReadmeSamples/ReadmeSamples.csproj;
 }
 
