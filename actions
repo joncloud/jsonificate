@@ -217,7 +217,7 @@ action_env() {
     log_info "Using version ${VERSION}";
     echo "ACTIONS_EXTRA_ARGS=/p:Version=${VERSION}" >> $ENV_FILE;
   else
-    VERSION_SUFFIX=$GIT_SHA;
+    VERSION_SUFFIX=$(echo GIT_SHA | cut -c 1-6);
     log_info "Using version suffix ${VERSION_SUFFIX}";
     echo "ACTIONS_EXTRA_ARGS=/p:VersionSuffix=${VERSION_SUFFIX}" >> $ENV_FILE;
   fi
