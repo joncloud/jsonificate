@@ -17,10 +17,6 @@ namespace Jsonificate.Tests
         [JsonPropertyName(JsonPropertyRenameName)]
         public int JsonPropertyRename { get; set; }
 
-        [JsonIgnore]
-        public int Ignored { get; set; }
-
-
         public override bool Equals(object obj)
         {
             return obj is TestClass other &&
@@ -74,7 +70,6 @@ namespace Jsonificate.Tests
                     .Select(x => x.Next())
                     .ToList(),
                 JsonPropertyRename = new Random().Next(),
-                Ignored = new Random().Next(),
             };
         }
     }
