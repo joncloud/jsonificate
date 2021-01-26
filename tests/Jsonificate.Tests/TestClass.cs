@@ -20,8 +20,6 @@ namespace Jsonificate.Tests
         [JsonIgnore]
         public int Ignored { get; set; }
 
-        public int Int32Field;
-
 
         public override bool Equals(object obj)
         {

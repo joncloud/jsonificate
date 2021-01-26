@@ -136,40 +136,5 @@ namespace Jsonificate.Tests
             var result = JsonSerializer.Deserialize<TestClass>(json, context.Options);
             Assert.Equal(0, result.Ignored);
         }
-
-        [Fact]
-        public void Serialize_ShouldIgnoreField_GivenIncludeFieldsFalse()
-        {
-            var context = new Context<TestClass>(TestClass.Random());
-
-            using var document = JsonDocument.Parse(context.Json);
-
-            var rootElement = document.RootElement;
-
-            Assert.False(
-                rootElement.TryGetProperty(nameof(TestClass.Int32Field), out var _),
-                $"Document should **not** have a property of {nameof(TestClass.Int32Field)}"
-            );
-
-            var json = context.Json.Substring(0, context.Json.Length - 1) + ",\"Int32Field\":123}";
-
-            var result = JsonSerializer.Deserialize<TestClass>(json, context.Options);
-            Assert.Equal(0, result.Int32Field);
-        }
-
-        [Fact]
-        public void Serialize_ShouldIncludeField_GivenIncludeFieldsTrue()
-        {
-            var options = new JsonSerializerOptions {
-                IncludeFields = true,
-            };
-
-            var testClass = TestClass.Random();
-            testClass.Int32Field = new Random().Next();
-
-            var context = new Context<TestClass>(testClass, options);
-
-            Assert.Equal(testClass.Int32Field, context.Instance.Int32Field);
-        }
     }
 }
