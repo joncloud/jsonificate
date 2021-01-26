@@ -122,6 +122,10 @@ public class PointPoolingJsonConverter : PoolingJsonConverter<Point>
 }
 ```
 
+### More Samples
+
+* [Integrating with ASP.NET Core](./samples/AspNetCoreSamples)
+
 ## Building the solution
 
-The majority of the GitHub Actions steps are available through [./actions](actions), and can be invoked to replicate the behavior.
+The majority of the GitHub Actions steps are available through [actions](./actions), and can be invoked to replicate the behavior.
