@@ -51,53 +51,5 @@ namespace Jsonificate.Tests
             };
             Assert.NotEqual(expected.Instance, withDefaultValues);
         }
-
-        [Fact]
-        public void Serialize_ShouldRenameProperty_GivenJsonPropertyNameAttribute()
-        {
-            var context = new Context<TestClass>(TestClass.Random());
-
-            using var document = JsonDocument.Parse(context.Json);
-
-            var rootElement = document.RootElement;
-
-            Assert.False(
-                rootElement.TryGetProperty(nameof(TestClass.JsonPropertyRename), out var _),
-                $"Document should **not** have a property of {nameof(TestClass.JsonPropertyRename)}"
-            );
-
-            Assert.True(
-                rootElement.TryGetProperty(TestClass.JsonPropertyRenameName, out var property),
-                $"Document should have a property of {nameof(TestClass.JsonPropertyRename)}"
-            );
-
-            Assert.Equal(context.Instance.JsonPropertyRename, property.GetInt32());
-        }
-
-        [Fact]
-        public void Serialize_ShouldRenameProperty_GivenPropertyNamingConvention()
-        {
-            var options = new JsonSerializerOptions {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            };
-
-            var context = new Context<TestClass>(TestClass.Random(), options);
-
-            using var document = JsonDocument.Parse(context.Json);
-
-            var rootElement = document.RootElement;
-
-            var expected = typeof(TestClass).GetProperties()
-                .Select(prop => prop.Name)
-                .Where(name => name != nameof(TestClass.JsonPropertyRename))
-                .Select(name => options.PropertyNamingPolicy.ConvertName(name))
-                .ToList();
-
-            var actual = expected
-                .Where(name => rootElement.TryGetProperty(name, out var _))
-                .ToList();
-
-            Assert.Equal(expected, actual);
-        }
     }
 }

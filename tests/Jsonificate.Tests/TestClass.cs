@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
 
 namespace Jsonificate.Tests
 {
@@ -11,11 +10,6 @@ namespace Jsonificate.Tests
         public DateTime DateTime { get; set; }
         public SubTestClass Sub { get; set; }
         public List<int> Int32s { get; set; }
-
-        public const string JsonPropertyRenameName = "_jsonPropertyRename";
-
-        [JsonPropertyName(JsonPropertyRenameName)]
-        public int JsonPropertyRename { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -28,8 +22,7 @@ namespace Jsonificate.Tests
             var result = String == other.String &&
                 DateTime == other.DateTime &&
                 Sub.Equals(other.Sub) &&
-                Int32s.Count == other.Int32s.Count &&
-                JsonPropertyRename == other.JsonPropertyRename;
+                Int32s.Count == other.Int32s.Count;
 
             if (result)
             {
@@ -51,8 +44,7 @@ namespace Jsonificate.Tests
                 String,
                 DateTime,
                 Sub,
-                Int32s,
-                JsonPropertyRename
+                Int32s
             );
         }
 
@@ -69,7 +61,6 @@ namespace Jsonificate.Tests
                 Int32s = Enumerable.Repeat(new Random(), 10)
                     .Select(x => x.Next())
                     .ToList(),
-                JsonPropertyRename = new Random().Next(),
             };
         }
     }
