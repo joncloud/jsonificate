@@ -125,6 +125,7 @@ public class PointPoolingJsonConverter : PoolingJsonConverter<Point>
 ### More Samples
 
 * [Integrating with ASP.NET Core](./samples/AspNetCoreSamples)
+* [Integrating with SignalR](./samples/SignalRSamples)
 
 ## Building the solution
 
