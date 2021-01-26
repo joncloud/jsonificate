@@ -171,22 +171,5 @@ namespace Jsonificate.Tests
 
             Assert.Equal(testClass.Int32Field, context.Instance.Int32Field);
         }
-
-        [Fact]
-        public void Serialize_ShouldIgnoreEvents()
-        {
-            var testClass = TestClass.Random();
-            testClass.NothingHappened += () => { };
-            var context = new Context<TestClass>(testClass);
-
-            using var document = JsonDocument.Parse(context.Json);
-
-            var rootElement = document.RootElement;
-
-            Assert.False(
-                rootElement.TryGetProperty(nameof(TestClass.NothingHappened), out var _),
-                $"Document should **not** have a property of {nameof(TestClass.Int32Field)}"
-            );
-        }
     }
 }

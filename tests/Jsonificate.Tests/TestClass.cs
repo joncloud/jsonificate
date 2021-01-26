@@ -22,7 +22,6 @@ namespace Jsonificate.Tests
 
         public int Int32Field;
 
-        public event Action NothingHappened;
 
         public override bool Equals(object obj)
         {
