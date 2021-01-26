@@ -38,11 +38,11 @@ namespace Jsonificate.Tests
         [Fact]
         public void Serialize_ShouldReuseFromPool()
         {
-            var expected = new Context(_options);
+            var expected = new Context<TestClass>(_options, TestClass.Random());
 
             _pool.Return(expected.Instance);
 
-            var actual = new Context(_options);
+            var actual = new Context<TestClass>(_options, TestClass.Random());
 
             Assert.NotEqual(expected.Value, actual.Value);
             Assert.Same(expected.Instance, actual.Instance);
@@ -63,7 +63,7 @@ namespace Jsonificate.Tests
         [Fact]
         public void Serialize_ShouldRenameProperty_GivenJsonPropertyNameAttribute()
         {
-            var context = new Context(_options);
+            var context = new Context<TestClass>(_options, TestClass.Random());
 
             using var document = JsonDocument.Parse(context.Json);
 
@@ -89,7 +89,7 @@ namespace Jsonificate.Tests
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             }.AddPoolingConverter(_pool);
 
-            var context = new Context(options);
+            var context = new Context<TestClass>(options, TestClass.Random());
 
             using var document = JsonDocument.Parse(context.Json);
 
@@ -112,7 +112,7 @@ namespace Jsonificate.Tests
         [Fact]
         public void Serialize_ShouldIgnoreProperty_GivenJsonIgnoreAttribute()
         {
-            var context = new Context(_options);
+            var context = new Context<TestClass>(_options, TestClass.Random());
 
             using var document = JsonDocument.Parse(context.Json);
 
@@ -137,7 +137,7 @@ namespace Jsonificate.Tests
         [InlineData(",\"Level\":{\"One\":{\"Two\":2}}}")]
         public void Serialize_ShouldKeepReading_GivenAdditionalComplexProperty(string additionalJson)
         {
-            var context = new Context(_options);
+            var context = new Context<TestClass>(_options, TestClass.Random());
 
             var json = context.Json.Substring(0, context.Json.Length - 1) + additionalJson;
 
@@ -148,7 +148,7 @@ namespace Jsonificate.Tests
         [Fact]
         public void Serialize_ShouldIgnoreField_GivenIncludeFieldsFalse()
         {
-            var context = new Context(_options);
+            var context = new Context<TestClass>(_options, TestClass.Random());
 
             using var document = JsonDocument.Parse(context.Json);
 
@@ -175,7 +175,7 @@ namespace Jsonificate.Tests
             var testClass = TestClass.Random();
             testClass.Int32Field = new Random().Next();
 
-            var context = new Context(options, testClass);
+            var context = new Context<TestClass>(options, testClass);
 
             Assert.Equal(testClass.Int32Field, context.Instance.Int32Field);
         }
@@ -185,7 +185,7 @@ namespace Jsonificate.Tests
         {
             var testClass = TestClass.Random();
             testClass.NothingHappened += () => { };
-            var context = new Context(_options, testClass);
+            var context = new Context<TestClass>(_options, testClass);
 
             using var document = JsonDocument.Parse(context.Json);
 
@@ -246,31 +246,6 @@ namespace Jsonificate.Tests
             public ReadonlyFields(int int32)
             {
                 Int32 = int32;
-            }
-        }
-
-        class Context
-        {
-            public string Json { get; }
-            public TestClass Instance { get; }
-            public string Value { get; }
-
-            public Context(JsonSerializerOptions options)
-                : this(options, TestClass.Random())
-            {
-            }
-
-            public Context(JsonSerializerOptions options, TestClass instance)
-            {
-                Json = JsonSerializer.Serialize(
-                    instance,
-                    options
-                );
-                Instance = JsonSerializer.Deserialize<TestClass>(
-                    Json,
-                    options
-                );
-                Value = JsonSerializer.Serialize(Instance, options);
             }
         }
     }
