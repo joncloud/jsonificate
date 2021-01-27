@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using Microsoft.Extensions.ObjectPool;
 using Xunit;
@@ -9,6 +8,30 @@ namespace Jsonificate.Tests
 {
     public partial class PoolingJsonConverterTests
     {
+        [Fact]
+        public void Ctor_ShouldThrowArgumentNullException_GivenNullOptions()
+        {
+            var options = default(JsonSerializerOptions);
+            var pool = new DefaultObjectPoolProvider().Create<TestClass>();
+
+            var ex = Assert.Throws<ArgumentNullException>(
+                () => new PoolingJsonConverter<TestClass>(options, pool)
+            );
+            Assert.Equal("options", ex.ParamName);
+        }
+
+        [Fact]
+        public void Ctor_ShouldThrowArgumentNullException_GivenNullPool()
+        {
+            var options = new JsonSerializerOptions();
+            var pool = default(ObjectPool<TestClass>);
+
+            var ex = Assert.Throws<ArgumentNullException>(
+                () => new PoolingJsonConverter<TestClass>(options, pool)
+            );
+            Assert.Equal("pool", ex.ParamName);
+        }
+
         [Fact]
         public void Deserialize_ShouldThrowJsonException_GivenMissingStartObject()
         {

@@ -7,8 +7,8 @@ namespace ReadmeSamples
 {
     public class PointPoolingJsonConverter : PoolingJsonConverter<Point>
     {
-        public PointPoolingJsonConverter(ObjectPool<Point> pool, JsonSerializerOptions options)
-          : base(pool, options)
+        public PointPoolingJsonConverter(JsonSerializerOptions options, ObjectPool<Point> pool)
+          : base(options, pool)
         {
         }
 

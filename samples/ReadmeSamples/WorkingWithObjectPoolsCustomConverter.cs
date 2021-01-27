@@ -14,7 +14,7 @@ namespace ReadmeSamples
             ObjectPool<Point> pool = provider.Create<Point>();
 
             var options = new JsonSerializerOptions();
-            options.Converters.Add(new PointPoolingJsonConverter(pool, options));
+            options.Converters.Add(new PointPoolingJsonConverter(options, pool));
 
             string json = "[10,53]";
 
