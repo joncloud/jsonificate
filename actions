@@ -221,9 +221,10 @@ action_sample() {
 action_nuget() {
   ensure_dotnet;
 
+  NUPKG_PATTERN=$1; shift;
   API_URL=$1; shift;
   API_KEY=$1; shift;
-  dotnet nuget push 'src/Jsonificate/bin/Release/Jsonificate*.nupkg' --api-key $API_KEY --source $API_URL;
+  dotnet nuget push "src/Jsonificate/bin/Release/${NUPKG_PATTERN}" --api-key $API_KEY --source $API_URL;
 }
 
 action_env() {
@@ -236,10 +237,12 @@ action_env() {
     VERSION=$(echo $GIT_REF | cut -c12-);
     log_info "Using version ${VERSION}";
     echo "EXTRA_ARGS=/p:Version=${VERSION}" >> $ENV_FILE;
+    echo "NUPKG_PATTERN=Jsonificate.${VERSION}.nupkg" >> $ENV_FILE;
   else
     VERSION_SUFFIX=$(echo $GIT_SHA | cut -c 1-6);
     log_info "Using version suffix ${VERSION_SUFFIX}";
     echo "EXTRA_ARGS=/p:VersionSuffix=${VERSION_SUFFIX}" >> $ENV_FILE;
+    echo "NUPKG_PATTERN=Jsonificate.*-${VERSION_SUFFIX}.nupkg" >> $ENV_FILE;
   fi
 }
 

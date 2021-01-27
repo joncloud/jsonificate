@@ -65,7 +65,7 @@ jobs:
         path: src/Jsonificate/bin/Release
 
     - name: nuget
-      run: ./actions nuget 'https://api.nuget.org/v3/index.json' $NUGET_API_KEY
+      run: ./actions nuget $NUPKG_PATTERN 'https://api.nuget.org/v3/index.json' $NUGET_API_KEY
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
