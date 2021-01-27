@@ -17,7 +17,11 @@ namespace Jsonificate
         {
             _pool = pool;
             _type = typeof(T);
-            _properties = new SpanDictionary<IJsonPropertyReader<T>>();
+            _properties = new SpanDictionary<IJsonPropertyReader<T>>(
+                options.PropertyNameCaseInsensitive
+                    ? Bytes.CaseInsensitive
+                    : Bytes.Exact
+            );
 
             foreach (var member in _type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -45,8 +49,6 @@ namespace Jsonificate
                 }
                 
                 var name = member.Name;
-
-                // TODO options.PropertyNameCaseInsensitive
 
                 var propertyName = member.GetCustomAttribute<JsonPropertyNameAttribute>();
                 if (propertyName is not null)

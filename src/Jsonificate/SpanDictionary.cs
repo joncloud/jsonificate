@@ -6,30 +6,31 @@ namespace Jsonificate
 {
     class SpanDictionary<TValue>
     {
+        readonly GetHashCode _getHashCode;
         readonly Dictionary<int, TValue> _inner = new Dictionary<int, TValue>();
-        static int GetHashCode(ReadOnlySpan<byte> span)
+
+        public SpanDictionary(GetHashCode getHashCode)
         {
-            unchecked // Overflow is fine, just wrap
-            {
-                int hash = 17;
-                int index = span.Length;
-                while (--index >= 0)
-                {
-                    hash = hash * 23 + span[index];
-                }
-                return hash;
-            }
+            _getHashCode = getHashCode;
         }
 
         public void Add(string key, TValue value)
         {
-            // TODO probably could make this no allocation
-            _inner.Add(GetHashCode(Encoding.UTF8.GetBytes(key)), value);
+            var chars = key.AsSpan();
+            var byteCount = Encoding.UTF8.GetByteCount(chars);
+
+            Span<byte> bytes = byteCount <= 256
+                ? stackalloc byte[256].Slice(0, byteCount)
+                : new byte[byteCount];
+            
+            var realByteCount = Encoding.UTF8.GetBytes(chars, bytes);
+
+            _inner.Add(_getHashCode(bytes.Slice(0, realByteCount)), value);
         }
 
         public bool TryGetValue(ReadOnlySpan<byte> key, out TValue value)
         {
-            return _inner.TryGetValue(GetHashCode(key), out value);
+            return _inner.TryGetValue(_getHashCode(key), out value);
         }
     }
 }
