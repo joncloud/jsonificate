@@ -45,8 +45,6 @@ namespace Jsonificate
                 .Select(member =>
                 {
                     var name = member.Name;
-
-                    // TODO options.AllowTrailingCommas
                     
                     var propertyName = member.GetCustomAttribute<JsonPropertyNameAttribute>();
                     if (propertyName is not null)
