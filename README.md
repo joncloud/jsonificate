@@ -1,6 +1,7 @@
 # Jsonificate
 
 [![NuGet](https://img.shields.io/nuget/v/Jsonificate.svg)](https://www.nuget.org/packages/Jsonificate/)
+![.NET](https://github.com/joncloud/jsonificate/workflows/.NET/badge.svg)
 
 ## Description
 
