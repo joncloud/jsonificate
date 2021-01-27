@@ -153,7 +153,20 @@ ensure_reportgenerator() {
 # Action functions - these are exposed for calling
 
 action_help() {
-  echo 'TODO - Look at source, or .github/workflows/dotnet.yml for example';
+  echo 'Usage: actions [command] [arguments]';
+  echo '';
+  echo 'Execute an action for the project. Most commands pass additional arguments onto subsequent dotnet call.';
+  echo '';
+  echo 'Commands:';
+  echo '  benchmark       Run the benchmark project.';
+  echo '  build           Build the solution.';
+  echo '  code_coverage   Convert the code coverage output into reports.';
+  echo '  env             Set the environment file for GitHub Actions.';
+  echo '  pack            Pack the artifacts into nupkg.';
+  echo '  nuget           Publish nupkgs to NuGet.org.';
+  echo '  restore         Restore package references for the solution.';
+  echo '  sample          Run the README sample project.';
+  echo '  test            Test the build artifacts.';
 }
 
 action_restore() {
@@ -177,14 +190,20 @@ action_test() {
 action_code_coverage() {
   ensure_reportgenerator;
   REPORT_TYPES="Cobertura;Html";
-  log_info "reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES";
-  reportgenerator -reports:tests/Jsonificate.Tests/coverage.cobertura.xml -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES;
+  REPORT_FILE="tests/Jsonificate.Tests/coverage.cobertura.xml";
+  [[ -f $REPORT_FILE ]] || action_test;
+
+  log_info "reportgenerator -reports:$REPORT_FILE -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES";
+  reportgenerator -reports:$REPORT_FILE -targetdir:artifacts/code-coverage -reporttypes:$REPORT_TYPES;
 }
 
 action_benchmark() {
   ensure_dotnet;
-  log_info "dotnet benchmarks/Jsonificate.Benchmarks/bin/Release/net5.0/Jsonificate.Benchmarks.dll";
-  dotnet benchmarks/Jsonificate.Benchmarks/bin/Release/net5.0/Jsonificate.Benchmarks.dll;
+  BENCHMARK_FILE='benchmarks/Jsonificate.Benchmarks/bin/Release/net5.0/Jsonificate.Benchmarks.dll';
+  [[ -f $BENCHMARK_FILE ]] || action_build --configuration Release;
+
+  log_info "dotnet $BENCHMARK_FILE";
+  dotnet $BENCHMARK_FILE;
 }
 
 action_pack() {
