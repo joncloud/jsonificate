@@ -58,8 +58,8 @@ Please try to determine if the issue is caused by an underlying library, and if 
 Try to follow these guidelines:
 
 - **Avoid creating issues for implementation help** - It's much better for discoverability, SEO, and semantics - to keep the issue tracker focused on bugs and feature requests - to ask implementation-related questions on [stackoverflow.com][so]
-- **Investigate the issue** - Search for exising issues (open or closed) that address the issue, and might have even resolved it already.
-- **Check the readme** - oftentimes you will find notes about creating issues, and where to go depending on the type of issue.
+- **Investigate the issue** - Search for existing issues (open or closed) that address the issue, and might have even resolved it already.
+- **Check the readme** - Oftentimes you will find notes about creating issues, and where to go depending on the type of issue.
 - Create the issue in the appropriate repository.
 
 ### Creating an issue
