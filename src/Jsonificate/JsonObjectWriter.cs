@@ -46,9 +46,6 @@ namespace Jsonificate
                 {
                     var name = member.Name;
 
-                    // TODO options.JsonNumberHandling
-                    // TODO options.IgnoreNullValues
-                    // TODO options.JsonIgnoreCondition
                     // TODO options.AllowTrailingCommas
                     
                     var propertyName = member.GetCustomAttribute<JsonPropertyNameAttribute>();
@@ -63,8 +60,8 @@ namespace Jsonificate
 
                     return member switch
                     {
-                        FieldInfo f => CreateFieldWriter(name, f),
-                        PropertyInfo p => CreatePropertyWriter(name, p),
+                        FieldInfo f => CreateFieldWriter(name, f, options),
+                        PropertyInfo p => CreatePropertyWriter(name, p, options),
                         _ => null,
                     };
                 })
@@ -72,18 +69,22 @@ namespace Jsonificate
                 .ToArray();
         }
 
-        static IJsonPropertyWriter<T> CreateFieldWriter(string name, FieldInfo field)
+        static IJsonPropertyWriter<T> CreateFieldWriter(string name, FieldInfo field, JsonSerializerOptions options)
         {
-            var writerType = typeof(FieldJsonPropertyWriter<,>)
+            var writerType = typeof(DelegatingJsonPropertyWriter<,>)
                 .MakeGenericType(typeof(T), field.FieldType);
-            return (IJsonPropertyWriter<T>)Activator.CreateInstance(writerType, new object[] { name, field });
+
+            var method = writerType.GetMethod("ForField", BindingFlags.Public | BindingFlags.Static);
+            return (IJsonPropertyWriter<T>)method.Invoke(null, new object[] { name, field, options });
         }
 
-        static IJsonPropertyWriter<T> CreatePropertyWriter(string name, PropertyInfo property)
+        static IJsonPropertyWriter<T> CreatePropertyWriter(string name, PropertyInfo property, JsonSerializerOptions options)
         {
-            var writerType = typeof(PropertyJsonPropertyWriter<,>)
+            var writerType = typeof(DelegatingJsonPropertyWriter<,>)
                 .MakeGenericType(typeof(T), property.PropertyType);
-            return (IJsonPropertyWriter<T>)Activator.CreateInstance(writerType, new object[] { name, property });
+
+            var method = writerType.GetMethod("ForProperty", BindingFlags.Public | BindingFlags.Static);
+            return (IJsonPropertyWriter<T>)method.Invoke(null, new object[] { name, property, options });
         }
 
         public void WriteObject(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

@@ -47,9 +47,6 @@ namespace Jsonificate
                 var name = member.Name;
 
                 // TODO options.PropertyNameCaseInsensitive
-                // TODO options.JsonNumberHandling
-                // TODO options.IgnoreNullValues
-                // TODO options.JsonIgnoreCondition
                 // TODO options.AllowTrailingCommas
 
                 var propertyName = member.GetCustomAttribute<JsonPropertyNameAttribute>();
