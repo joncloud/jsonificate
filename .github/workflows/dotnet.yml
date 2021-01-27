@@ -2,10 +2,14 @@ name: .NET
 
 on:
   push:
-    branches: [ publish ]
+    branches:
+      - publish
+    tags:
+      - v*
 
   pull_request:
-    branches: [ publish ]
+    branches:
+      - publish
 
 jobs:
   build:
