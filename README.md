@@ -30,8 +30,8 @@ Use the extension method for `JsonSerializerOptions` in order to create a new cl
 using System;
 using System.Text.Json;
 
-var options = new JsonSerializerOptions();
 // Setup options your way.
+var options = new JsonSerializerOptions();
 
 var cloner = options.CreateCloner();
 
